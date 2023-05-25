@@ -6,7 +6,7 @@
 # service. First it will grab the username of #
 # the logged in user, elevate them to admin   #
 # and then create a launch daemon that will   #
-# count down from 30 minutes and then create  #
+# count down from 60 minutes and then create  #
 # and run a secondary script that will demote #
 # the user back to a standard account. The    #
 # launch daemon will continue to count down   #

@@ -1,30 +1,45 @@
 #!/bin/sh
 
-################################################################################
-# This script will provide temporary admin rights to a standard user right 		 #
-# from self service.   																												 #
-# First it will grab the username of the logged in user, elevate them to admin #
-# and then create a launch daemon that will count down from 5 minutes and 		 #
-# then create and run a secondary script that will demote the user back to 		 #
-# a standard account.																													 #
-# The launch daemon will continue to count down no matter how often the 			 #
-# user logs out or restarts their computer.                       						 #
-################################################################################
+###############################################
+# This script will provide temporary admin    #
+# rights to a standard user right from self   #
+# service. First it will grab the username of #
+# the logged in user, elevate them to admin   #
+# and then create a launch daemon that will   #
+# count down from 30 minutes and then create  #
+# and run a secondary script that will demote #
+# the user back to a standard account. The    #
+# launch daemon will continue to count down   #
+# no matter how often the user logs out or    #
+# restarts their computer.                    #
+###############################################
+
+# Modified by jfilice@csumb.edu to add Jamf Pro parameter variables
+# Parameter 4
+# Default value 60
+AdminMinutes="${4:-60}"
+
 
 #############################################
 # find the logged in user and let them know #
 #############################################
-AdminMinutes=5
 
 currentUser=$(who | awk '/console/{print $1}')
 echo ${currentUser}
 
-osascript -e 'display dialog "You now have administrative rights for 5 minutes. DO NOT ABUSE THIS PRIVILEGE..." buttons {"Make me an admin, please"} default button 1'
+# jfilice Modified phrasing here
+scriptResult=$(osascript -e "display dialog \"You will have administrative rights for ${AdminMinutes} minutes.\" buttons {\"I will not abuse this privilege\", \"Cancel\"} default button 1 cancel button 2")
 
-#############################################################################
-# write a daemon that will let you remove the privilege with another script #
-# and chmod/chown to make sure it'll run, then load the daemon							#
-#############################################################################
+echo "scriptResult=$scriptResult"
+if [ "$scriptResult" != "button returned:I will not abuse this privilege" ]; then
+	exit 0
+fi
+
+#########################################################
+# write a daemon that will let you remove the privilege #
+# with another script and chmod/chown to make 			#
+# sure it'll run, then load the daemon					#
+#########################################################
 
 #Create the plist
 sudo defaults write /Library/LaunchDaemons/removeAdmin.plist Label -string "removeAdmin"
@@ -82,7 +97,12 @@ if [ -f /private/var/userToRemove/user ]; then
     rm -f /private/var/userToRemove/user
     launchctl unload /Library/LaunchDaemons/removeAdmin.plist
     rm /Library/LaunchDaemons/removeAdmin.plist
+	log collect --last 30m --output /private/var/userToRemove/$userToRemove.logarchive
 fi
 EOF
+
+# jfilice Added notification here.
+osascript -e "display dialog \"You now have administrative rights for $AdminMinutes minutes. You may have to log out for the change to take effect.\" buttons {\"DO NOT ABUSE THIS PRIVILEGE\"} default button 1"
+
 
 exit 0

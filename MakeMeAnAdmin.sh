@@ -14,7 +14,7 @@
 #############################################
 # find the logged in user and let them know #
 #############################################
-minutes_to_allow_admin=5
+AdminMinutes=5
 
 currentUser=$(who | awk '/console/{print $1}')
 echo ${currentUser}
@@ -33,7 +33,7 @@ sudo defaults write /Library/LaunchDaemons/removeAdmin.plist Label -string "remo
 sudo defaults write /Library/LaunchDaemons/removeAdmin.plist ProgramArguments -array -string /bin/sh -string "/Library/Application Support/JAMF/removeAdminRights.sh"
 
 #Start the daemon after the specified time
-admin_seconds=$(expr ${minutes_to_allow_admin} \* 60)
+admin_seconds=$(expr ${AdminMinutes} \* 60)
 sudo defaults write /Library/LaunchDaemons/removeAdmin.plist StartInterval -integer ${admin_seconds}
 
 #Set run at load

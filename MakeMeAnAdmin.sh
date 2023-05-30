@@ -32,7 +32,7 @@ scriptResult=$(osascript -e "display dialog \"You will have administrative right
 
 echo "scriptResult=$scriptResult"
 if [ "$scriptResult" != "button returned:I will not abuse this privilege" ]; then
-	exit 0
+	exit 1
 fi
 
 #########################################################
